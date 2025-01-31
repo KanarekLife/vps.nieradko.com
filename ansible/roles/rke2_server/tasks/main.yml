@@ -1,0 +1,57 @@
+- name: Download rke2 installation script
+  ansible.builtin.get_url:
+    url: https://get.rke2.io
+    dest: /tmp/rke2_install.sh
+    mode: '0755'
+- name: Install rke2
+  ansible.builtin.command:
+    creates: /usr/bin/rke2
+    cmd: sh /tmp/rke2_install.sh
+- name: Copy rke2 config
+  ansible.builtin.copy:
+    src: config.yaml
+    dest: /etc/rancher/rke2/config.yaml
+    mode: "0644"
+- name: Start rke2
+  ansible.builtin.systemd:
+    name: rke2-server
+    enabled: true
+    state: started
+- name: Make sure .kube directory exists
+  ansible.builtin.file:
+    path: /home/kanareklife/.kube
+    state: directory
+    owner: kanareklife
+    group: kanareklife
+    mode: "0755"
+- name: Copy kubeconfig to kanareklife
+  ansible.builtin.copy:
+    remote_src: true
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: /home/kanareklife/.kube/config
+    mode: "0644"
+    owner: kanareklife
+    group: kanareklife
+- name: Allow traffic to k8s.nieradko.com
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    state: enabled
+    zone: public
+    immediate: true
+  loop:
+    - 6443/tcp
+    - 9345/tcp
+    - 10250/tcp
+    - 443/tcp
+    - 80/tcp
+- name: Allow trusted sources
+  ansible.posix.firewalld:
+    source: "{{ item }}"
+    zone: trusted
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - 10.42.0.0/16
+    - 10.43.0.0/16

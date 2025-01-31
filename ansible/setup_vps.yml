@@ -1,0 +1,6 @@
+- name: Setup VPS
+  hosts: all
+  become: true
+  roles:
+    - role: common
+    - role: rke2_server

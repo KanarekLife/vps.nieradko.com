@@ -1,0 +1,41 @@
+---
+- name: Create administrator user on VPS
+  hosts: all
+  become: true
+  vars_prompt:
+    - name: user_password
+      prompt: "kanareklife user password"
+      private: true
+      encrypt: sha512_crypt
+      confirm: true
+    - name: root_password
+      prompt: "root user password"
+      private: true
+      encrypt: sha512_crypt
+      confirm: true
+
+  tasks:
+    - name: Create kanareklife user
+      ansible.builtin.user:
+        name: kanareklife
+        comment: Stanisław Nieradko
+        create_home: true
+        groups: wheel
+        append: true
+        password: "{{ user_password }}"
+    - name: Create .ssh directory for kanareklife
+      ansible.builtin.file:
+        path: "/home/kanareklife/.ssh"
+        state: directory
+        mode: "0755"
+    - name: Set authorized key for kanareklife
+      ansible.builtin.copy:
+        dest: "/home/kanareklife/.ssh/authorized_keys"
+        content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHSA2Z9KuX5at/iwXs8FOdj8VyBimNZgKGnb6rblo/zo kanareklife@PC"
+        owner: kanareklife
+        group: kanareklife
+        mode: "0600"
+    - name: Set root password
+      ansible.builtin.user:
+        name: root
+        password: "{{ root_password }}"

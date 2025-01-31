@@ -1,0 +1,45 @@
+- name: Disable rocky user
+  ansible.builtin.user:
+    name: rocky
+    state: absent
+- name: Remove rocky user's home directory
+  ansible.builtin.file:
+    path: /home/rocky/
+    state: absent
+- name: Add oracle-cloud-agent repository
+  ansible.builtin.copy:
+    src: oci-included-ol9.repo
+    dest: /etc/yum.repos.d/oci-included-ol9.repo
+    mode: "0644"
+- name: Remove cockpit
+  ansible.builtin.dnf:
+    name: "cockpit*"
+    state: absent
+- name: Install basic packages
+  ansible.builtin.dnf:
+    name:
+      - oracle-cloud-agent
+      - vim
+      - htop
+      - firewalld
+    state: present
+- name: Permanently allow ssh traffic
+  ansible.posix.firewalld:
+    service: ssh
+    permanent: true
+    state: enabled
+- name: Ensure services are started and enabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - firewalld
+    - oracle-cloud-agent
+    - sshd
+- name: Copy sshd_config
+  notify: restart_sshd
+  ansible.builtin.copy:
+    src: sshd_config
+    dest: /etc/ssh/sshd_config
+    mode: "0644"

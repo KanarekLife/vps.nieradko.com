@@ -1,0 +1,6 @@
+[ol9_oci_included]
+name=Oracle Linux $releasever OCI Included Packages ($basearch)
+baseurl=https://yum-phx.oracle.com/repo/OracleLinux/OL9/oci/included/$basearch/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+gpgcheck=1
+enabled=1
